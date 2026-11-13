@@ -97,6 +97,7 @@ const adminSchema = z.object({
 
 const declarativeConfigSchema = z.object({
   admin: adminSchema.optional(),
+  unifiedApiKey: z.string().min(8).optional(),
   // Premium license key (freellmapi.co). Same minimum as the dashboard's
   // POST /api/premium/key length gate.
   license: z.string().min(8).optional(),
@@ -494,6 +495,9 @@ export function applyDeclarativeConfig(input: unknown, source = 'inline'): Decla
         console.warn(`[config] ${warning}`);
       }
     }
+    if (parsed.data.unifiedApiKey) {
+      setSetting('unified_api_key', parsed.data.unifiedApiKey.trim());
+    }
     for (const key of parsed.data.keys ?? []) {
       const warning = missingKeyWarning(key);
       if (warning) {
@@ -566,14 +570,34 @@ export async function activateConfiguredLicense(key: string): Promise<void> {
   }
 }
 
+function envOverrides(): { unifiedApiKey?: string; admin?: { email: string; password: string } } {
+  const out: { unifiedApiKey?: string; admin?: { email: string; password: string } } = {};
+  const unified = (process.env.FREEAPI_UNIFIED_API_KEY || process.env.FREELLMAPI_CLIENT_KEY || '').trim();
+  if (unified) out.unifiedApiKey = unified;
+  const email = process.env.FREEAPI_ADMIN_EMAIL?.trim();
+  const password = process.env.FREEAPI_ADMIN_PASSWORD?.trim();
+  if (email && password) out.admin = { email, password };
+  return out;
+}
+
 export function applyDeclarativeConfigFromEnv(): DeclarativeConfigResult {
   const loaded = readConfigFromEnv();
-  if (!loaded) {
+  const extra = envOverrides();
+  if (!loaded && Object.keys(extra).length === 0) {
     return { applied: false, admin: false, license: false, keys: 0, customModels: 0, models: 0, fallback: 0, routing: false, warnings: [] };
   }
-  const result = applyDeclarativeConfig(loaded.value, loaded.source);
+  const source = loaded?.source ?? 'FREEAPI_ENV_OVERRIDES';
+  const baseValue = loaded?.value ?? {};
+  const value = (typeof baseValue === 'object' && baseValue !== null && !Array.isArray(baseValue))
+    ? {
+        ...baseValue,
+        ...(!('unifiedApiKey' in baseValue) && extra.unifiedApiKey ? { unifiedApiKey: extra.unifiedApiKey } : {}),
+        ...(!('admin' in baseValue) && extra.admin ? { admin: extra.admin } : {}),
+      }
+    : baseValue;
+  const result = applyDeclarativeConfig(value, source);
   console.log(
-    `[config] applied ${loaded.source}: ${result.keys} keys, ${result.customModels} custom models, ` +
+    `[config] applied ${source}: ${result.keys} keys, ${result.customModels} custom models, ` +
       `${result.models} model edits, ${result.fallback} fallback rows${result.routing ? ', routing' : ''}` +
       `${result.admin ? ', admin account created' : ''}${result.license ? ', license activation started' : ''}` +
       `${result.warnings.length > 0 ? `, ${result.warnings.length} entries skipped` : ''}`,

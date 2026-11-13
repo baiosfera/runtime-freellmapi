@@ -392,3 +392,57 @@ describe('declarative config license', () => {
     expect(getSetting(SETTING_LICENSE_KEY)).toBe('flk_new_key_2');
   });
 });
+
+describe('declarative unified client key bootstrap', () => {
+  const origClientKey = process.env.FREELLMAPI_CLIENT_KEY;
+  const origUnifiedKey = process.env.FREEAPI_UNIFIED_API_KEY;
+  const origConfig = process.env.FREEAPI_CONFIG_JSON;
+  const origConfigPath = process.env.FREEAPI_CONFIG_PATH;
+  const origAdminEmail = process.env.FREEAPI_ADMIN_EMAIL;
+  const origAdminPass = process.env.FREEAPI_ADMIN_PASSWORD;
+
+  beforeAll(() => {
+    process.env.ENCRYPTION_KEY = '0'.repeat(64);
+    initDb(':memory:');
+  });
+
+  beforeEach(() => {
+    delete process.env.FREELLMAPI_CLIENT_KEY;
+    delete process.env.FREEAPI_UNIFIED_API_KEY;
+    delete process.env.FREEAPI_CONFIG_JSON;
+    delete process.env.FREEAPI_CONFIG_PATH;
+    delete process.env.FREEAPI_ADMIN_EMAIL;
+    delete process.env.FREEAPI_ADMIN_PASSWORD;
+  });
+
+  afterEach(() => {
+    if (origClientKey === undefined) delete process.env.FREELLMAPI_CLIENT_KEY;
+    else process.env.FREELLMAPI_CLIENT_KEY = origClientKey;
+    if (origUnifiedKey === undefined) delete process.env.FREEAPI_UNIFIED_API_KEY;
+    else process.env.FREEAPI_UNIFIED_API_KEY = origUnifiedKey;
+    if (origConfig === undefined) delete process.env.FREEAPI_CONFIG_JSON;
+    else process.env.FREEAPI_CONFIG_JSON = origConfig;
+    if (origConfigPath === undefined) delete process.env.FREEAPI_CONFIG_PATH;
+    else process.env.FREEAPI_CONFIG_PATH = origConfigPath;
+    if (origAdminEmail === undefined) delete process.env.FREEAPI_ADMIN_EMAIL;
+    else process.env.FREEAPI_ADMIN_EMAIL = origAdminEmail;
+    if (origAdminPass === undefined) delete process.env.FREEAPI_ADMIN_PASSWORD;
+    else process.env.FREEAPI_ADMIN_PASSWORD = origAdminPass;
+  });
+
+  it('sets unified_api_key from inline unifiedApiKey in FREEAPI_CONFIG_JSON', () => {
+    process.env.FREEAPI_CONFIG_JSON = JSON.stringify({
+      unifiedApiKey: 'freellmapi-shared-client-key-01',
+    });
+    const res = applyDeclarativeConfigFromEnv();
+    expect(res.applied).toBe(true);
+    expect(getSetting('unified_api_key')).toBe('freellmapi-shared-client-key-01');
+  });
+
+  it('falls back to FREELLMAPI_CLIENT_KEY env when FREEAPI_CONFIG_JSON omits unifiedApiKey', () => {
+    process.env.FREELLMAPI_CLIENT_KEY = 'freellmapi-shared-client-key-02';
+    const res = applyDeclarativeConfigFromEnv();
+    expect(res.applied).toBe(true);
+    expect(getSetting('unified_api_key')).toBe('freellmapi-shared-client-key-02');
+  });
+});
