@@ -10,7 +10,7 @@ zerops:
         - npm rebuild better-sqlite3
         - npm run build -w client
         - npm run build -w server
-        - npm prune --omit=dev && rm -rf .git client/src desktop cli tests
+        - npm prune --omit=dev && rm -rf .git desktop tests
       deployFiles:
         - .
       cache:
