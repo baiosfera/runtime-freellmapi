@@ -32,9 +32,9 @@ zerops:
         HOST: "0.0.0.0"
         NODE_ENV: "production"
         FREEAPI_DB_PATH: "/mnt/localstorage/freellmapi/data/freeapi.db"
+        FREEAPI_CONFIG_PATH: "/mnt/localstorage/freellmapi/config.json"
         ENCRYPTION_KEY: ${FREEAPI_ENCRYPTION_KEY}
         FREEAPI_UNIFIED_API_KEY: ${FREELLMAPI_CLIENT_KEY}
-        # FREEAPI_ADMIN_EMAIL / FREEAPI_ADMIN_PASSWORD are inherited directly from Project Shared Vault
         FREEAPI_CONFIG_JSON: ${FREEAPI_CONFIG_JSON_SECRET}
       start: node /var/www/server/dist/index.js
       healthCheck:
