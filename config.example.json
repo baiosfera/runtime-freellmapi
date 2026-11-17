@@ -3,11 +3,15 @@
     "email": "admin@example.com",
     "password": "<ADMIN_PASSWORD_MIN_8_CHARS>"
   },
+  "unifiedApiKey": "<FREELLMAPI_CLIENT_KEY_MIN_8_CHARS>",
   "keys": [
     {
-      "platform": "groq",
-      "key": "<GROQ_API_KEY>",
-      "label": "groq-pool"
+      "platform": "kilo",
+      "label": "kilo-keyless"
+    },
+    {
+      "platform": "ovh",
+      "label": "ovh-keyless"
     },
     {
       "platform": "cerebras",
@@ -15,14 +19,9 @@
       "label": "cerebras-pool"
     },
     {
-      "platform": "opencode",
-      "key": "<OPENCODE_API_KEY>",
-      "label": "opencode-pool"
-    },
-    {
-      "platform": "openrouter",
-      "key": "<OPENROUTER_API_KEY>",
-      "label": "openrouter-pool"
+      "platform": "groq",
+      "key": "<GROQ_API_KEY>",
+      "label": "groq-pool"
     },
     {
       "platform": "ollama",
@@ -30,12 +29,36 @@
       "label": "ollama-pool"
     },
     {
-      "platform": "huggingface",
-      "key": "<HUGGINGFACE_API_KEY>",
-      "label": "huggingface-pool"
+      "platform": "openrouter",
+      "key": "<OPENROUTER_API_KEY>",
+      "label": "openrouter-pool"
+    }
+  ],
+  "models": [
+    {
+      "platform": "groq",
+      "modelId": "openai/gpt-oss-120b",
+      "sizeLabel": "Large",
+      "contextWindow": 131072,
+      "tpmLimit": 8000,
+      "enabled": true,
+      "fallbackEnabled": true
+    },
+    {
+      "platform": "groq",
+      "modelId": "openai/gpt-oss-safeguard-20b",
+      "enabled": false,
+      "fallbackEnabled": false
+    },
+    {
+      "platform": "groq",
+      "modelId": "allam-2-7b",
+      "enabled": false,
+      "fallbackEnabled": false
     }
   ],
   "routing": {
-    "strategy": "balanced"
+    "strategy": "smartest",
+    "keySelectionStrategy": "least-remaining"
   }
 }
